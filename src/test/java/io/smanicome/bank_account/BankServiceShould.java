@@ -1,15 +1,13 @@
 package io.smanicome.bank_account;
 
 import io.smanicome.bank_account.exceptions.ClientNotFoundException;
-import io.smanicome.bank_account.exceptions.NegativeDepositException;
+import io.smanicome.bank_account.exceptions.NegativeAmountException;
 import io.smanicome.bank_account.persistence.BankClientRepository;
 import io.smanicome.bank_account.persistence.BankOperationRepository;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -43,15 +41,15 @@ class BankServiceShould {
     }
 
     @Test
-    void returnBankOperationOnDeposit() throws ClientNotFoundException, NegativeDepositException {
+    void returnBankOperationOnDeposit() throws ClientNotFoundException, NegativeAmountException {
         final UUID operationId = UUID.randomUUID();
         final UUID clientId = UUID.randomUUID();
         final LocalDate date = LocalDate.now(clock);
-        final BigInteger amount = BigInteger.ONE;
+        final Amount amount = Amount.of(BigInteger.ONE);
         final String label = "test";
 
-        final BankOperation lastOperation = new BankOperation(null, clientId, BigInteger.TEN, BigInteger.TEN, date, "last");
-        final BigInteger newBalance = lastOperation.balance().add(amount);
+        final BankOperation lastOperation = new BankOperation(null, clientId, Amount.of(BigInteger.TEN), Amount.of(BigInteger.TEN), date, "last");
+        final Amount newBalance = lastOperation.balance().add(amount);
 
         final BankOperation operationToSave = new BankOperation(null, clientId, amount, newBalance, date, label);
         final BankOperation expectedOperation = new BankOperation(operationId, clientId, amount, newBalance, date, label);
@@ -75,18 +73,7 @@ class BankServiceShould {
     @Test
     void throwOnUnknownClient() {
         final UUID clientId = UUID.randomUUID();
-        assertThrows(ClientNotFoundException.class, () -> bankService.deposit(clientId, BigInteger.ZERO, ""));
-
-        verify(bankClientRepository).existsById(clientId);
-        verifyNoMoreInteractions(bankClientRepository, bankOperationRepository);
-    }
-
-    @Test
-    void throwOnNegativeDeposit() {
-        final UUID clientId = UUID.randomUUID();
-        when(bankClientRepository.existsById(any())).thenReturn(true);
-
-        assertThrows(NegativeDepositException.class, () -> bankService.deposit(clientId, BigInteger.valueOf(-1), ""));
+        assertThrows(ClientNotFoundException.class, () -> bankService.deposit(clientId, Amount.ZERO, ""));
 
         verify(bankClientRepository).existsById(clientId);
         verifyNoMoreInteractions(bankClientRepository, bankOperationRepository);

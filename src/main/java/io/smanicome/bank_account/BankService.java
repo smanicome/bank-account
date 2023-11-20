@@ -1,7 +1,8 @@
 package io.smanicome.bank_account;
 
 import io.smanicome.bank_account.exceptions.ClientNotFoundException;
-import io.smanicome.bank_account.exceptions.NegativeDepositException;
+import io.smanicome.bank_account.exceptions.NegativeAmountException;
+import io.smanicome.bank_account.exceptions.NegativeBalanceException;
 import io.smanicome.bank_account.persistence.BankClientRepository;
 import io.smanicome.bank_account.persistence.BankOperationRepository;
 
@@ -22,21 +23,17 @@ public class BankService implements IBankService {
     }
 
     @Override
-    public BankOperation deposit(UUID clientId, BigInteger amount, String label) throws ClientNotFoundException, NegativeDepositException {
+    public BankOperation deposit(UUID clientId, Amount amount, String label) throws ClientNotFoundException, NegativeAmountException {
         final boolean clientExists = bankClientRepository.existsById(clientId);
         if(!clientExists) {
             throw new ClientNotFoundException();
         }
 
-        if(amount.signum() == -1) {
-            throw new NegativeDepositException();
-        }
-
-        final BigInteger currentBalance = bankOperationRepository.findLatestOperation(clientId)
+        final Amount currentBalance = bankOperationRepository.findLatestOperation(clientId)
                 .map(BankOperation::balance)
-                .orElse(BigInteger.ZERO);
+                .orElse(Amount.ZERO);
 
-        final BigInteger newBalance = currentBalance.add(amount);
+        final Amount newBalance = currentBalance.add(amount);
 
         final BankOperation operation = new BankOperation(null, clientId, amount, newBalance, LocalDate.now(clock), label);
 
