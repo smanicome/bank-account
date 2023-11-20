@@ -5,20 +5,24 @@ import io.smanicome.bank_account.exceptions.NegativeAmountException;
 import io.smanicome.bank_account.exceptions.NegativeBalanceException;
 import io.smanicome.bank_account.persistence.BankClientRepository;
 import io.smanicome.bank_account.persistence.BankOperationRepository;
+import io.smanicome.bank_account.visual.StatementWriter;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public class BankService implements IBankService {
+    private final Clock clock;
     private final BankClientRepository bankClientRepository;
     private final BankOperationRepository bankOperationRepository;
-    private final Clock clock;
+    private final StatementWriter statementWriter;
 
-    public BankService(BankClientRepository bankClientRepository, BankOperationRepository bankOperationRepository, Clock clock) {
+    public BankService(Clock clock, BankClientRepository bankClientRepository, BankOperationRepository bankOperationRepository, StatementWriter statementWriter) {
+        this.clock = clock;
         this.bankClientRepository = bankClientRepository;
         this.bankOperationRepository = bankOperationRepository;
-        this.clock = clock;
+        this.statementWriter = statementWriter;
     }
 
     @Override
@@ -67,6 +71,16 @@ public class BankService implements IBankService {
         }
     }
 
+    @Override
+    public void printAccountStatement(UUID clientId) throws ClientNotFoundException {
+        assertThatClientExists(clientId);
+
+        final List<BankOperation> operations = bankOperationRepository.findByAccountId(clientId);
+        final Statement statement = new Statement(clientId, operations, LocalDateTime.now(clock));
+
+        statementWriter.write(statement);
+    }
+
     private void assertThatClientExists(UUID clientId) throws ClientNotFoundException {
         final boolean clientExists = bankClientRepository.existsById(clientId);
         if(!clientExists) {
@@ -75,7 +89,7 @@ public class BankService implements IBankService {
     }
 
     private Amount getCurrentBalance(UUID clientId) {
-        return bankOperationRepository.findLatestOperation(clientId)
+        return bankOperationRepository.findLatestOperationByClientId(clientId)
                 .map(BankOperation::balance)
                 .orElse(Amount.ZERO);
     }

@@ -2,18 +2,19 @@ package io.smanicome.bank_account;
 
 import io.smanicome.bank_account.exceptions.NegativeAmountException;
 
-import java.math.BigInteger;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Objects;
 
 public class Amount implements Comparable<Amount> {
-    public static final Amount ZERO = new Amount(BigInteger.ZERO);
-    private final BigInteger value;
+    public static final Amount ZERO = new Amount(BigDecimal.ZERO);
+    private final BigDecimal value;
 
-    private Amount(BigInteger value) {
+    private Amount(BigDecimal value) {
         this.value = value;
     }
 
-    public static Amount of(BigInteger value) throws NegativeAmountException {
+    public static Amount of(BigDecimal value) throws NegativeAmountException {
         if(value.signum() == -1) throw new NegativeAmountException();
         return new Amount(value);
     }
@@ -43,5 +44,9 @@ public class Amount implements Comparable<Amount> {
     @Override
     public int hashCode() {
         return Objects.hash(value);
+    }
+
+    public String toCurrencyString() {
+        return value.setScale(2, RoundingMode.HALF_EVEN).toString();
     }
 }
