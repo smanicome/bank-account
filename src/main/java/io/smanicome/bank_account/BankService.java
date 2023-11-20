@@ -7,7 +7,7 @@ import io.smanicome.bank_account.persistence.BankClientRepository;
 import io.smanicome.bank_account.persistence.BankOperationRepository;
 
 import java.time.Clock;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public class BankService implements IBankService {
@@ -35,7 +35,7 @@ public class BankService implements IBankService {
                     BankOperation.OperationType.DEPOSIT,
                     amount,
                     newBalance,
-                    LocalDate.now(clock),
+                    LocalDateTime.now(clock),
                     label);
 
             return bankOperationRepository.save(operation);
@@ -58,7 +58,7 @@ public class BankService implements IBankService {
                     BankOperation.OperationType.WITHDRAWAL,
                     amount,
                     newBalance,
-                    LocalDate.now(clock),
+                    LocalDateTime.now(clock),
                     "withdrawal");
 
             return bankOperationRepository.save(operation);

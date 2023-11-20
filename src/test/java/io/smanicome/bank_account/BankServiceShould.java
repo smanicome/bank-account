@@ -14,10 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigInteger;
-import java.time.Clock;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
+import java.time.*;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -48,7 +45,7 @@ class BankServiceShould {
         void returnBankOperation() throws ClientNotFoundException, NegativeAmountException {
             final UUID operationId = UUID.randomUUID();
             final UUID clientId = UUID.randomUUID();
-            final LocalDate date = LocalDate.now(clock);
+            final LocalDateTime date = LocalDateTime.now(clock);
             final Amount amount = Amount.of(BigInteger.ONE);
             final String label = "test";
             final BankOperation.OperationType type = BankOperation.OperationType.DEPOSIT;
@@ -91,7 +88,7 @@ class BankServiceShould {
         void returnBankOperation() throws ClientNotFoundException, NegativeAmountException, NegativeBalanceException {
             final UUID operationId = UUID.randomUUID();
             final UUID clientId = UUID.randomUUID();
-            final LocalDate date = LocalDate.now(clock);
+            final LocalDateTime date = LocalDateTime.now(clock);
             final Amount amount = Amount.of(BigInteger.ONE);
             final BankOperation.OperationType type = BankOperation.OperationType.WITHDRAWAL;
 
@@ -129,7 +126,7 @@ class BankServiceShould {
         @Test
         void throwOnNegativeBalance() throws NegativeAmountException {
             final UUID clientId = UUID.randomUUID();
-            final LocalDate date = LocalDate.now(clock);
+            final LocalDateTime date = LocalDateTime.now(clock);
             final Amount amount = Amount.of(BigInteger.ONE);
             final BankOperation.OperationType type = BankOperation.OperationType.WITHDRAWAL;
 
