@@ -23,7 +23,7 @@ public class BankService implements IBankService {
     }
 
     @Override
-    public BankOperation deposit(UUID clientId, Amount amount, String label) throws ClientNotFoundException, NegativeAmountException {
+    public BankOperation deposit(UUID clientId, Amount amount, String label) throws ClientNotFoundException {
         final boolean clientExists = bankClientRepository.existsById(clientId);
         if(!clientExists) {
             throw new ClientNotFoundException();
@@ -33,10 +33,15 @@ public class BankService implements IBankService {
                 .map(BankOperation::balance)
                 .orElse(Amount.ZERO);
 
-        final Amount newBalance = currentBalance.add(amount);
+        try {
+            final Amount newBalance = currentBalance.add(amount);
+            final BankOperation operation = new BankOperation(null, clientId, amount, newBalance, LocalDate.now(clock), label);
 
-        final BankOperation operation = new BankOperation(null, clientId, amount, newBalance, LocalDate.now(clock), label);
-
-        return bankOperationRepository.save(operation);
+            return bankOperationRepository.save(operation);
+        } catch (NegativeAmountException e) {
+            throw new AssertionError(e);
+        }
     }
+
+
 }
