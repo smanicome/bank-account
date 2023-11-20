@@ -23,18 +23,14 @@ public class BankService implements IBankService {
 
     @Override
     public BankOperation deposit(UUID clientId, Amount amount, String label) throws ClientNotFoundException {
-        final boolean clientExists = bankClientRepository.existsById(clientId);
-        if(!clientExists) {
-            throw new ClientNotFoundException();
-        }
+        assertThatClientExists(clientId);
 
-        final Amount currentBalance = bankOperationRepository.findLatestOperation(clientId)
-                .map(BankOperation::balance)
-                .orElse(Amount.ZERO);
+        final Amount currentBalance = getCurrentBalance(clientId);
 
         try {
             final Amount newBalance = currentBalance.add(amount);
-            final BankOperation operation = new BankOperation(null,
+            final BankOperation operation = new BankOperation(
+                    null,
                     clientId,
                     BankOperation.OperationType.DEPOSIT,
                     amount,
@@ -50,18 +46,14 @@ public class BankService implements IBankService {
 
     @Override
     public BankOperation withdraw(UUID clientId, Amount amount) throws ClientNotFoundException, NegativeBalanceException {
-        final boolean clientExists = bankClientRepository.existsById(clientId);
-        if(!clientExists) {
-            throw new ClientNotFoundException();
-        }
+        assertThatClientExists(clientId);
 
-        final Amount currentBalance = bankOperationRepository.findLatestOperation(clientId)
-                .map(BankOperation::balance)
-                .orElse(Amount.ZERO);
+        final Amount currentBalance = getCurrentBalance(clientId);
 
         try {
             final Amount newBalance = currentBalance.subtract(amount);
-            final BankOperation operation = new BankOperation(null,
+            final BankOperation operation = new BankOperation(
+                    null,
                     clientId,
                     BankOperation.OperationType.WITHDRAWAL,
                     amount,
@@ -75,5 +67,16 @@ public class BankService implements IBankService {
         }
     }
 
+    private void assertThatClientExists(UUID clientId) throws ClientNotFoundException {
+        final boolean clientExists = bankClientRepository.existsById(clientId);
+        if(!clientExists) {
+            throw new ClientNotFoundException();
+        }
+    }
 
+    private Amount getCurrentBalance(UUID clientId) {
+        return bankOperationRepository.findLatestOperation(clientId)
+                .map(BankOperation::balance)
+                .orElse(Amount.ZERO);
+    }
 }
