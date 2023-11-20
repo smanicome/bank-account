@@ -23,6 +23,10 @@ public class Amount implements Comparable<Amount> {
         return Amount.of(value.add(amount.value));
     }
 
+    public Amount subtract(Amount amount) throws NegativeAmountException {
+        return Amount.of(value.subtract(amount.value));
+    }
+
     @Override
     public int compareTo(Amount amount) {
         return value.compareTo(amount.value);

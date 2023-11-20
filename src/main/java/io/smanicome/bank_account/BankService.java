@@ -6,7 +6,6 @@ import io.smanicome.bank_account.exceptions.NegativeBalanceException;
 import io.smanicome.bank_account.persistence.BankClientRepository;
 import io.smanicome.bank_account.persistence.BankOperationRepository;
 
-import java.math.BigInteger;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -35,11 +34,44 @@ public class BankService implements IBankService {
 
         try {
             final Amount newBalance = currentBalance.add(amount);
-            final BankOperation operation = new BankOperation(null, clientId, amount, newBalance, LocalDate.now(clock), label);
+            final BankOperation operation = new BankOperation(null,
+                    clientId,
+                    BankOperation.OperationType.DEPOSIT,
+                    amount,
+                    newBalance,
+                    LocalDate.now(clock),
+                    label);
 
             return bankOperationRepository.save(operation);
         } catch (NegativeAmountException e) {
             throw new AssertionError(e);
+        }
+    }
+
+    @Override
+    public BankOperation withdraw(UUID clientId, Amount amount) throws ClientNotFoundException, NegativeBalanceException {
+        final boolean clientExists = bankClientRepository.existsById(clientId);
+        if(!clientExists) {
+            throw new ClientNotFoundException();
+        }
+
+        final Amount currentBalance = bankOperationRepository.findLatestOperation(clientId)
+                .map(BankOperation::balance)
+                .orElse(Amount.ZERO);
+
+        try {
+            final Amount newBalance = currentBalance.subtract(amount);
+            final BankOperation operation = new BankOperation(null,
+                    clientId,
+                    BankOperation.OperationType.WITHDRAWAL,
+                    amount,
+                    newBalance,
+                    LocalDate.now(clock),
+                    "withdrawal");
+
+            return bankOperationRepository.save(operation);
+        } catch (NegativeAmountException e) {
+            throw new NegativeBalanceException();
         }
     }
 
