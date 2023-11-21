@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public interface BankOperationRepository {
     BankOperation save(BankOperation operation);
-    Optional<BankOperation> findLatestOperationByClientId(UUID id);
+    Optional<BankOperation> findLatestOperationByClientId(UUID clientId);
 
     List<BankOperation> findByAccountId(UUID clientId);
 }
